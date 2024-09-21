@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Today's Calls Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        /* Add these styles to your existing styles */
+        .flatpickr-calendar {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+        }
+
+        .calendar-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }
+
+        .calendar-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .submit-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Add or update these styles */
+        .calendar-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .submit-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%; /* Make the button full width */
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Ensure the submit button is inside the calendar */
+        .flatpickr-calendar {
+            padding-bottom: 50px; /* Add space for the submit button */
+        }
+
+        .whatsapp-btn, .call-btn {
+            padding: 5px 10px;
+            margin: 2px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .whatsapp-btn {
+            background-color: #25D366;
+            color: white;
+        }
+
+        .call-btn {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="dashboard-title">Today's Calls Dashboard</h1>
+            <div class="header-buttons">
+                <button class="btn btn-dark" id="backBtn">Back</button>
+                <button class="btn btn-dark" id="calendarBtn">Calendar</button>
+                <button class="btn" id="settingsBtn">⚙️</button>
+            </div>
+        </div>
+
+        <div id="currentDate" class="current-date"></div>
+
+        <div class="card">
+            <h2>Today's Call Summary</h2>
+            <div class="call-summary">
+                <div class="summary-row firstrow">
+                    <div class="summary-card toatalcalls" id="totalCallsCard">
+                        <div class="number" id="totalCallsSummary">0</div>
+                        <div>Total Calls</div>
+                    </div>
+                </div>
+                <div class="summary-row secondrow">
+                    <div class="summary-card answredcalls notinterestedcard">
+                        <div class="number green" id="notInterestedCallsSummary">0</div>
+                        <div>Not Interested</div>
+                    </div>
+                    <div class="summary-card unanswredcalls">
+                        <div class="number red" id="unansweredCallsSummary">0</div>
+                        <div>Unanswered</div> 
+                    </div>
+                </div>
+                <div class="summary-row thirdrow">
+                    <div class="summary-card callbackcalls callbackcard" id="callbackCard">
+                        <div class="number orange" id="callBackCallsSummary">0</div>
+                        <div>Callback</div>
+                    </div>
+                    <div class="summary-card intreastedcalls interestedcard" id="interestedCard">
+                        <div class="number blue" id="interestedCallsSummary">0</div>
+                        <div>Interested</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card call-details-card" id="callDetailsCard" style="display: none;">
+            <div class="card-header">
+                <h2>Today's Call Details</h2>
+            </div>
+            <div class="table-responsive">
+                <table class="call-details-table">
+                    <thead>
+                        <tr>
+                            <th>Contact</th>
+                            <th>Status</th>
+                            <th>Duration</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="callDetailsBody">
+                        <!-- Call details will be populated here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                <div class="button-container">
+                    <button id="printBtn" class="btn btn-primary action-btn">Print</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="floating-image" id="dialpadTrigger">
+        <img src="images/telephone.png" alt="Floating Image">
+    </div>
+
+    <div class="calendar-container" id="calendarContainer">
+        <div class="calendar-content">
+            <div id="calendar"></div>
+            <button id="submitDate" class="submit-btn">Submit</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        // Initialize Firebase with your config
+        const firebaseConfig = {
+            apiKey: "AIzaSyADbdw5KtrmjQT_5EBJ6kNzExx8kkTEkuc",
+            authDomain: "realestate-694f3.firebaseapp.com",
+            databaseURL: "https://realestate-694f3-default-rtdb.firebaseio.com",
+            projectId: "realestate-694f3",
+            storageBucket: "realestate-694f3.appspot.com",
+            messagingSenderId: "966861149434",
+            appId: "1:966861149434:web:8a57876a91c80bcf216543",
+            measurementId: "G-J68SDN99DV"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const database = firebase.database();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to update the dashboard with today's calls
+            function updateTodayDashboard(todayCalls) {
+                console.log('Updating dashboard with calls:', todayCalls);
+                updateSummaryNumbers(todayCalls);
+                window.todayCalls = todayCalls; // Store calls for later use
+            }
+
+            // Add event listeners for summary cards
+            const addClickListener = (id, status) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('click', () => showCallDetails(status));
+                } else {
+                    console.error(`Element with id '${id}' not found`);
+                }
+            };
+
+            addClickListener('totalCallsCard', 'Total');
+            addClickListener('notInterestedCallsSummary', 'Not Interested');
+            addClickListener('unansweredCallsSummary', 'Unanswered');
+            addClickListener('callbackCard', 'Callback');
+            addClickListener('interestedCard', 'Interested');
+
+            // Function to show call details
+            function showCallDetails(status) {
+                const callDetailsBody = document.getElementById('callDetailsBody');
+                callDetailsBody.innerHTML = '';
+
+                let filteredCalls = window.todayCalls || [];
+                if (status !== 'Total') {
+                    filteredCalls = filteredCalls.filter(call => call.status === status);
+                }
+
+                // Sort calls by timestamp in descending order (most recent first)
+                filteredCalls.sort((a, b) => b.timestamp - a.timestamp);
+
+                // Define status colors and styles
+                const statusStyles = {
+                    'Interested': 'background-color: #28a745; color: white; padding: 3px 8px; border-radius: 12px;',
+                    'Not Interested': 'background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 12px;',
+                    'Callback': 'background-color: #007bff; color: white; padding: 3px 8px; border-radius: 12px;',
+                    'Unanswered': 'background-color: #ffc107; color: black; padding: 3px 8px; border-radius: 12px;'
+                };
+
+                filteredCalls.forEach(call => {
+                    const row = document.createElement('tr');
+                    const callDate = new Date(call.timestamp);
+                    const date = callDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                    const time = callDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                    
+                    // Extract the last 10 digits of the phone number
+                    const phoneNumber = call.number.replace(/\D/g, '').slice(-10);
+                    
+                    row.innerHTML = `
+                        <td>${call.number}</td>
+                        <td><span style="${statusStyles[call.status]}">${call.status}</span></td>
+                        <td>${call.duration || 'N/A'}</td>
+                        <td>${date}</td>
+                        <td>${time}</td>
+                        ${(call.status === 'Callback' || call.status === 'Interested') ? `
+                        <td>
+                            <button class="whatsapp-btn" data-number="91${phoneNumber}">WhatsApp</button>
+                            <button class="call-btn" data-number="${phoneNumber}">Call</button>
+                        </td>
+                        ` : '<td></td>'}
+                    `;
+                    callDetailsBody.appendChild(row);
+                });
+
+                const callDetailsCard = document.getElementById('callDetailsCard');
+                callDetailsCard.style.display = 'block';
+                document.querySelector('.call-details-card h2').textContent = `${status} Call Details`;
+
+                // Add event listeners for WhatsApp and Call buttons
+                const whatsappButtons = document.querySelectorAll('.whatsapp-btn');
+                const callButtons = document.querySelectorAll('.call-btn');
+
+                whatsappButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const phoneNumber = this.getAttribute('data-number');
+                        const preloadedText = "Hello! I'm reaching out regarding our previous conversation about real estate opportunities.";
+                        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(preloadedText)}`;
+                        window.open(whatsappUrl, '_blank');
+                    });
+                });
+
+                callButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const phoneNumber = this.getAttribute('data-number');
+                        window.open(`tel:${phoneNumber}`, '_self');
+                    });
+                });
+            }
+
+            // Function to update summary numbers
+            function updateSummaryNumbers(calls) {
+                if (!calls || !Array.isArray(calls)) {
+                    calls = [];
+                }
+                document.getElementById('totalCallsSummary').textContent = calls.length;
+                document.getElementById('notInterestedCallsSummary').textContent = calls.filter(call => call.status === 'Not Interested').length;
+                document.getElementById('unansweredCallsSummary').textContent = calls.filter(call => call.status === 'Unanswered').length;
+                document.getElementById('callBackCallsSummary').textContent = calls.filter(call => call.status === 'Callback').length;
+                document.getElementById('interestedCallsSummary').textContent = calls.filter(call => call.status === 'Interested').length;
+            }
+
+            // Set up real-time listener for today's calls
+            function setupRealtimeListener() {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const startOfDay = today.getTime();
+                const endOfDay = startOfDay + 24 * 60 * 60 * 1000 - 1;
+
+                console.log('Setting up real-time listener for today:', new Date(startOfDay), 'to', new Date(endOfDay));
+
+                const callsRef = database.ref('calls');
+                
+                callsRef.orderByChild('timestamp')
+                    .startAt(startOfDay)
+                    .endAt(endOfDay)
+                    .on('value', (snapshot) => {
+                        console.log('Received data from Firebase');
+                        const todayCalls = [];
+                        snapshot.forEach((childSnapshot) => {
+                            todayCalls.push(childSnapshot.val());
+                        });
+                        console.log('Fetched today\'s calls:', todayCalls);
+                        updateTodayDashboard(todayCalls);
+                    }, (error) => {
+                        console.error("Error fetching today's calls:", error);
+                    });
+            }
+
+            // Call the function to set up the real-time listener
+            setupRealtimeListener();
+
+            // Add event listener for back button
+            const backBtn = document.getElementById('backBtn');
+            if (backBtn) {
+                backBtn.addEventListener('click', function() {
+                    window.location.href = 'maindashboard.html'; // Adjust this if the path is different
+                });
+            }
+
+            // Add event listener for calendar button
+            const calendarBtn = document.getElementById('calendarBtn');
+            const calendarContainer = document.getElementById('calendarContainer');
+            const submitDateBtn = document.getElementById('submitDate');
+            let selectedDate;
+
+            if (calendarBtn) {
+                calendarBtn.addEventListener('click', function() {
+                    calendarContainer.style.display = 'block';
+                    if (!flatpickr.instanceExists) {
+                        flatpickr("#calendar", {
+                            inline: true,
+                            maxDate: "today",
+                            dateFormat: "Y-m-d",
+                            onChange: function(selectedDates, dateStr, instance) {
+                                selectedDate = selectedDates[0];
+                            },
+                            onReady: function(dateObj, dateStr, instance) {
+                                const calendarElement = instance.calendarContainer;
+                                calendarElement.appendChild(submitDateBtn);
+                            }
+                        });
+                        flatpickr.instanceExists = true;
+                    }
+                });
+            }
+
+            if (submitDateBtn) {
+                submitDateBtn.addEventListener('click', function() {
+                    if (selectedDate) {
+                        fetchDateCalls(selectedDate);
+                        calendarContainer.style.display = 'none';
+                    } else {
+                        alert("Please select a date");
+                    }
+                });
+            }
+
+            function fetchDateCalls(date) {
+                const startOfDay = new Date(date.setHours(0, 0, 0, 0)).getTime();
+                const endOfDay = new Date(date.setHours(23, 59, 59, 999)).getTime();
+
+                const callsRef = database.ref('calls');
+                
+                callsRef.orderByChild('timestamp')
+                    .startAt(startOfDay)
+                    .endAt(endOfDay)
+                    .once('value')
+                    .then((snapshot) => {
+                        const dateCalls = [];
+                        snapshot.forEach((childSnapshot) => {
+                            dateCalls.push(childSnapshot.val());
+                        });
+                        updateTodayDashboard(dateCalls);
+                        document.getElementById('currentDate').textContent = date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    })
+                    .catch((error) => {
+                        console.error("Error fetching date calls:", error);
+                    });
+            }
+        });
+    </script>
+</body>
+</html>

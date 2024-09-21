@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Calls Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        /* ... existing styles ... */
+
+        .month-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .month-btn {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .month-btn:hover, .month-btn.active {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .whatsapp-btn, .call-btn {
+            padding: 5px 10px;
+            margin: 2px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .whatsapp-btn {
+            background-color: #25D366;
+            color: white;
+        }
+
+        .call-btn {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="dashboard-title">Monthly Calls Dashboard</h1>
+            <div class="header-buttons">
+                <button class="btn btn-dark" id="backBtn">Back</button>
+                <button class="btn" id="settingsBtn">⚙️</button>
+            </div>
+        </div>
+
+        <div id="currentMonth" class="current-date"></div>
+
+        <div class="month-buttons">
+            <button class="month-btn" data-month="1">January</button>
+            <button class="month-btn" data-month="2">February</button>
+            <button class="month-btn" data-month="3">March</button>
+            <button class="month-btn" data-month="4">April</button>
+            <button class="month-btn" data-month="5">May</button>
+            <button class="month-btn" data-month="6">June</button>
+            <button class="month-btn" data-month="7">July</button>
+            <button class="month-btn" data-month="8">August</button>
+            <button class="month-btn" data-month="9">September</button>
+            <button class="month-btn" data-month="10">October</button>
+            <button class="month-btn" data-month="11">November</button>
+            <button class="month-btn" data-month="12">December</button>
+        </div>
+
+        <div class="card">
+            <h2>Monthly Call Summary</h2>
+            <div class="call-summary">
+                <div class="summary-row firstrow">
+                    <div class="summary-card toatalcalls" id="totalCallsCard">
+                        <div class="number" id="totalCallsSummary">0</div>
+                        <div>Total Calls</div>
+                    </div>
+                </div>
+                <div class="summary-row secondrow">
+                    <div class="summary-card answredcalls notinterestedcard">
+                        <div class="number green" id="notInterestedCallsSummary">0</div>
+                        <div>Not Interested</div>
+                    </div>
+                    <div class="summary-card unanswredcalls">
+                        <div class="number red" id="unansweredCallsSummary">0</div>
+                        <div>Unanswered</div> 
+                    </div>
+                </div>
+                <div class="summary-row thirdrow">
+                    <div class="summary-card callbackcalls callbackcard" id="callbackCard">
+                        <div class="number orange" id="callBackCallsSummary">0</div>
+                        <div>Callback</div>
+                    </div>
+                    <div class="summary-card intreastedcalls interestedcard" id="interestedCard">
+                        <div class="number blue" id="interestedCallsSummary">0</div>
+                        <div>Interested</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card call-details-card" id="callDetailsCard" style="display: none;">
+            <div class="card-header">
+                <h2>Call Details</h2>
+            </div>
+            <div class="table-responsive">
+                <table class="call-details-table">
+                    <thead>
+                        <tr>
+                            <th>Contact</th>
+                            <th>Status</th>
+                            <th>Duration</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="callDetailsBody">
+                        <!-- Call details will be populated here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                <div class="button-container">
+                    <button id="printBtn" class="btn btn-primary action-btn">Print</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const monthButtons = document.querySelectorAll('.month-btn');
+            const currentMonth = new Date().getMonth() + 1;
+            let cachedData = {};
+
+            monthButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const selectedMonth = button.dataset.month;
+                    fetchMonthData(selectedMonth);
+                    
+                    // Update active button immediately
+                    monthButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                });
+            });
+
+            // Set current month as active and fetch its data
+            const currentMonthButton = document.querySelector(`.month-btn[data-month="${currentMonth}"]`);
+            if (currentMonthButton) {
+                currentMonthButton.classList.add('active');
+                fetchMonthData(currentMonth);
+            }
+
+            function fetchMonthData(month) {
+                // Show loading indicator
+                document.getElementById('currentMonth').textContent = 'Loading...';
+
+                if (cachedData[month]) {
+                    updateDashboard(cachedData[month], month);
+                    return;
+                }
+
+                const currentYear = new Date().getFullYear();
+                const startDate = new Date(currentYear, month - 1, 1).getTime();
+                const endDate = new Date(currentYear, month, 0).getTime();
+
+                database.ref('calls')
+                    .orderByChild('timestamp')
+                    .startAt(startDate)
+                    .endAt(endDate)
+                    .once('value')
+                    .then((snapshot) => {
+                        const monthData = [];
+                        snapshot.forEach((childSnapshot) => {
+                            monthData.push(childSnapshot.val());
+                        });
+                        
+                        cachedData[month] = monthData;
+                        updateDashboard(monthData, month);
+                    })
+                    .catch((error) => {
+                        console.error("Error fetching month data:", error);
+                        updateDashboard([], month); // Update with empty data in case of error
+                    });
+            }
+
+            function updateDashboard(data, month) {
+                const monthNames = ["January", "February", "March", "April", "May", "June",
+                                    "July", "August", "September", "October", "November", "December"];
+                const currentYear = new Date().getFullYear();
+
+                document.getElementById('currentMonth').textContent = `${monthNames[month - 1]} ${currentYear}`;
+
+                // Always update summary cards, show 0 if no data
+                document.getElementById('totalCallsSummary').textContent = data.length || '0';
+                document.getElementById('notInterestedCallsSummary').textContent = data.filter(call => call.status === 'Not Interested').length || '0';
+                document.getElementById('unansweredCallsSummary').textContent = data.filter(call => call.status === 'Unanswered').length || '0';
+                document.getElementById('callBackCallsSummary').textContent = data.filter(call => call.status === 'Callback').length || '0';
+                document.getElementById('interestedCallsSummary').textContent = data.filter(call => call.status === 'Interested').length || '0';
+
+                // Update call details
+                updateCallDetails(data);
+            }
+
+            function updateCallDetails(data) {
+                const callDetailsBody = document.getElementById('callDetailsBody');
+                callDetailsBody.innerHTML = '';
+
+                if (data.length === 0) {
+                    document.getElementById('callDetailsCard').style.display = 'none';
+                } else {
+                    data.forEach(call => {
+                        const row = document.createElement('tr');
+                        const callDate = new Date(call.timestamp);
+                        const date = callDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                        const time = callDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                        row.innerHTML = `
+                            <td>${call.number}</td>
+                            <td>${call.status}</td>
+                            <td>${call.duration || 'N/A'}</td>
+                            <td>${date}</td>
+                            <td>${time}</td>
+                        `;
+                        callDetailsBody.appendChild(row);
+                    });
+                    document.getElementById('callDetailsCard').style.display = 'block';
+                }
+            }
+
+            // Update the event listener for the back button
+            const backBtn = document.getElementById('backBtn');
+            if (backBtn) {
+                backBtn.addEventListener('click', function() {
+                    window.close(); // Close the current window
+                });
+            }
+
+            // Add event listeners for summary cards
+            const addClickListener = (id, status) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('click', () => toggleCallDetails(status));
+                }
+            };
+
+            addClickListener('totalCallsCard', 'Total');
+            addClickListener('notInterestedCallsSummary', 'Not Interested');
+            addClickListener('unansweredCallsSummary', 'Unanswered');
+            addClickListener('callBackCallsSummary', 'Callback');
+            addClickListener('interestedCallsSummary', 'Interested');
+
+            // Function to toggle call details
+            function toggleCallDetails(status) {
+                const callDetailsCard = document.getElementById('callDetailsCard');
+                if (callDetailsCard.style.display === 'none' || callDetailsCard.dataset.currentStatus !== status) {
+                    showCallDetails(status);
+                } else {
+                    callDetailsCard.style.display = 'none';
+                }
+            }
+
+            // Update the showCallDetails function
+            function showCallDetails(status) {
+                const callDetailsBody = document.getElementById('callDetailsBody');
+                callDetailsBody.innerHTML = '';
+
+                let filteredCalls = callData.details;
+                if (status !== 'Total') {
+                    filteredCalls = callData.details.filter(call => call.status === status);
+                }
+
+                // Sort calls by timestamp in descending order (most recent first)
+                filteredCalls.sort((a, b) => b.timestamp - a.timestamp);
+
+                // Define status colors and styles
+                const statusStyles = {
+                    'Interested': 'background-color: #28a745; color: white; padding: 3px 8px; border-radius: 12px;',
+                    'Not Interested': 'background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 12px;',
+                    'Callback': 'background-color: #007bff; color: white; padding: 3px 8px; border-radius: 12px;',
+                    'Unanswered': 'background-color: #ffc107; color: black; padding: 3px 8px; border-radius: 12px;'
+                };
+
+                filteredCalls.forEach(call => {
+                    const row = document.createElement('tr');
+                    const callDate = new Date(call.timestamp);
+                    const date = callDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                    const time = callDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                    
+                    // Extract the last 10 digits of the phone number
+                    const phoneNumber = call.number.replace(/\D/g, '').slice(-10);
+                    
+                    row.innerHTML = `
+                        <td>${call.number}</td>
+                        <td><span style="${statusStyles[call.status]}">${call.status}</span></td>
+                        <td>${call.duration || 'N/A'}</td>
+                        <td>${date}</td>
+                        <td>${time}</td>
+                        ${(call.status === 'Callback' || call.status === 'Interested') ? `
+                        <td>
+                            <button class="whatsapp-btn" data-number="91${phoneNumber}">WhatsApp</button>
+                            <button class="call-btn" data-number="${phoneNumber}">Call</button>
+                        </td>
+                        ` : '<td></td>'}
+                    `;
+                    callDetailsBody.appendChild(row);
+                });
+
+                const callDetailsCard = document.getElementById('callDetailsCard');
+                callDetailsCard.style.display = 'block';
+                callDetailsCard.dataset.currentStatus = status;
+                document.querySelector('.call-details-card h2').textContent = `${status} Call Details`;
+
+                // Add event listeners for WhatsApp and Call buttons
+                const whatsappButtons = document.querySelectorAll('.whatsapp-btn');
+                const callButtons = document.querySelectorAll('.call-btn');
+
+                whatsappButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const phoneNumber = this.getAttribute('data-number');
+                        const preloadedText = "Hello! I'm reaching out regarding our previous conversation about real estate opportunities.";
+                        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(preloadedText)}`;
+                        window.open(whatsappUrl, '_blank');
+                    });
+                });
+
+                callButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const phoneNumber = this.getAttribute('data-number');
+                        window.open(`tel:${phoneNumber}`, '_self');
+                    });
+                });
+            }
+
+            // Add event listener for print button
+            const printBtn = document.getElementById('printBtn');
+            if (printBtn) {
+                printBtn.addEventListener('click', printCallDetails);
+            }
+
+            // Add event listener for settings button
+            const settingsBtn = document.getElementById('settingsBtn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', function() {
+                    alert('Settings clicked');
+                });
+            }
+
+            // Add event listener for dialpad trigger
+            const dialpadTrigger = document.getElementById('dialpadTrigger');
+            if (dialpadTrigger) {
+                dialpadTrigger.addEventListener('click', openDialpad);
+            }
+        });
+    </script>
+</body>
+</html>
+
+

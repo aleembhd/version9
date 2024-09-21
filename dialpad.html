@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Black & White Dial Pad</title>
+    <style>
+        :root {
+            --primary-color: #000000;
+            --secondary-color: #FFFFFF;
+            --background-color: #F0F0F0;
+            --surface-color: #FFFFFF;
+            --text-color: #000000;
+            --muted-color: #888888;
+            --hover-color: #E0E0E0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .phone-dialer {
+            background-color: var(--surface-color);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+            max-width: 340px;
+            width: 100%;
+        }
+
+        .display {
+            font-size: 36px;
+            font-weight: 300;
+            color: var(--text-color);
+            margin-bottom: 25px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            background-color: var(--background-color);
+            border-radius: 12px;
+            transition: none;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .key {
+            background-color: var(--surface-color);
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: none;
+            overflow: hidden;
+            position: relative;
+            -webkit-tap-highlight-color: transparent; /* Remove blue highlight on mobile */
+        }
+
+        .key:active {
+            background-color: var(--hover-color);
+            transform: none;
+        }
+
+        /* Remove the ::after pseudo-element */
+        .key::after {
+            display: none;
+        }
+
+        .call-button {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            border-radius: 35px;
+            padding: 15px 30px;
+            font-size: 22px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .call-button:hover {
+            background-color: #333333;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+        }
+
+        .call-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .delete-button {
+            background-color: var(--muted-color);
+            border-color: var(--muted-color);
+            color: var(--surface-color);
+        }
+
+        .delete-button:hover {
+            background-color: #666666;
+            border-color: #666666;
+        }
+
+        .contact-info {
+            margin-top: 25px;
+            font-size: 14px;
+            color: var(--muted-color);
+        }
+
+        /* New styles for the popup card */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-card {
+            background-color: var(--surface-color);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .popup-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .popup-buttons {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .popup-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: none;
+        }
+
+        .yes-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .no-button {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .popup-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .popup-button:active {
+            transform: translateY(0);
+        }
+
+        /* Additional styles for the second popup */
+        .popup-card-2 {
+            background-color: var(--surface-color);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+            animation: popIn 0.3s ease-out;
+        }
+
+        .popup-buttons-2 {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .popup-button-2 {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: none;
+        }
+
+        .not-interested-button {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .interested-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .callback-button {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .popup-button-2:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .popup-button-2:active {
+            transform: translateY(0);
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            line-height: 1.5;
+            border-radius: 0.2rem;
+        }
+
+        .btn-success {
+            color: #fff;
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+
+        .btn-primary {
+            color: #fff;
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn + .btn {
+            margin-left: 0.3rem;
+        }
+
+        .error-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 1000;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-dialer">
+        <div class="display" id="display"></div>
+        <div class="keypad" id="keypad">
+            <button class="key">1</button>
+            <button class="key">2</button>
+            <button class="key">3</button>
+            <button class="key">4</button>
+            <button class="key">5</button>
+            <button class="key">6</button>
+            <button class="key">7</button>
+            <button class="key">8</button>
+            <button class="key">9</button>
+            <button class="key">*</button>
+            <button class="key">0</button>
+            <button class="key">#</button>
+        </div>
+        <button class="key delete-button" id="deleteButton">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
+            </svg>
+        </button>
+        <button class="call-button" id="callButton">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+                <path d="M20.01 15.38C18.78 15.38 17.59 15.18 16.48 14.82C16.13 14.7 15.74 14.79 15.47 15.06L13.9 17.03C11.07 15.68 8.42 13.13 7.01 10.2L8.96 8.54C9.23 8.26 9.31 7.87 9.2 7.52C8.83 6.41 8.64 5.22 8.64 3.99C8.64 3.45 8.19 3 7.65 3H4.19C3.65 3 3 3.24 3 3.99C3 13.28 10.73 21 20.01 21C20.72 21 21 20.37 21 19.82V16.37C21 15.83 20.55 15.38 20.01 15.38Z" fill="currentColor"/>
+            </svg>
+            Call
+        </button>
+    </div>
+
+    <!-- New popup overlay and card -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-card">
+            <div class="popup-title">Was The Call Answered?</div>
+            <div class="popup-buttons">
+                <button class="popup-button yes-button" id="yesButton">YES</button>
+                <button class="popup-button no-button" id="noButton">NO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New popup overlay and card for call status -->
+    <div class="popup-overlay" id="popupOverlay2">
+        <div class="popup-card-2">
+            <div class="popup-title">Call Status</div>
+            <div class="popup-buttons-2">
+                <button class="popup-button-2 not-interested-button" id="notInterestedButton">Not Interested</button>
+                <button class="popup-button-2 interested-button" id="interestedButton">Interested</button>
+                <button class="popup-button-2 callback-button" id="callbackButton">Callback</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="error-popup" id="errorPopup">
+        Please enter a proper 10-digit mobile number to make calls.
+    </div>
+
+    <!-- Add these script tags before your existing script -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        const display = document.getElementById('display');
+        const keypad = document.getElementById('keypad');
+        const deleteButton = document.getElementById('deleteButton');
+        const callButton = document.getElementById('callButton');
+
+        let phoneNumber = '';
+        let callStartTime;
+        let callEndTime;
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyADbdw5KtrmjQT_5EBJ6kNzExx8kkTEkuc",
+            authDomain: "realestate-694f3.firebaseapp.com",
+            databaseURL: "https://realestate-694f3-default-rtdb.firebaseio.com",
+            projectId: "realestate-694f3",
+            storageBucket: "realestate-694f3.appspot.com",
+            messagingSenderId: "966861149434",
+            appId: "1:966861149434:web:8a57876a91c80bcf216543",
+            measurementId: "G-J68SDN99DV"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Get a reference to the database service
+        const database = firebase.database();
+
+        // Use event delegation for better performance
+        keypad.addEventListener('click', (e) => {
+            if (e.target.classList.contains('key') && phoneNumber.length < 10) {
+                phoneNumber += e.target.textContent;
+                updateDisplay();
+            }
+        });
+
+        function updateDisplay() {
+            display.textContent = phoneNumber;
+        }
+
+        deleteButton.addEventListener('click', deleteLastDigit);
+        deleteButton.addEventListener('mousedown', startDelete);
+        deleteButton.addEventListener('touchstart', startDelete);
+        deleteButton.addEventListener('mouseup', stopDelete);
+        deleteButton.addEventListener('mouseleave', stopDelete);
+        deleteButton.addEventListener('touchend', stopDelete);
+
+        let deleteInterval;
+
+        function startDelete(e) {
+            e.preventDefault();
+            deleteLastDigit();
+            deleteInterval = setInterval(deleteLastDigit, 150);
+        }
+
+        function stopDelete() {
+            clearInterval(deleteInterval);
+        }
+
+        function deleteLastDigit() {
+            phoneNumber = phoneNumber.slice(0, -1);
+            updateDisplay();
+        }
+
+        callButton.addEventListener('click', () => {
+            if (phoneNumber.length === 10) {
+                window.location.href = `tel:${phoneNumber}`;
+                
+                // Start the call timer and show popup after a delay
+                callStartTime = new Date();
+                setTimeout(() => {
+                    document.getElementById('popupOverlay').style.display = 'flex';
+                }, 5000);
+            } else {
+                showErrorPopup();
+            }
+        });
+
+        function showErrorPopup() {
+            const errorPopup = document.getElementById('errorPopup');
+            errorPopup.style.display = 'block';
+            setTimeout(() => {
+                errorPopup.style.display = 'none';
+            },  2000); // Hide the popup after 3 seconds
+        }
+
+        function calculateDuration() {
+            callEndTime = new Date();
+            const durationInSeconds = Math.round((callEndTime - callStartTime) / 1000);
+            if (durationInSeconds < 60) {
+                return `${durationInSeconds} sec`;
+            } else {
+                const minutes = Math.floor(durationInSeconds / 60);
+                const seconds = durationInSeconds % 60;
+                return `${minutes} min ${seconds} sec`;
+            }
+        }
+
+        function handleCallAnswer(wasAnswered) {
+            const duration = wasAnswered ? calculateDuration() : 'N/A';
+            if (wasAnswered) {
+                document.getElementById('popupOverlay').style.display = 'none';
+                document.getElementById('popupOverlay2').style.display = 'flex';
+            } else {
+                // For unanswered calls, record them immediately
+                recordCallData(phoneNumber, 'Unanswered', 'Call was not answered', duration);
+                document.getElementById('popupOverlay').style.display = 'none';
+            }
+        }
+
+        function handleCallStatus(status) {
+            console.log('handleCallStatus called with status:', status);
+            const notes = status; // Use the status as notes
+            const duration = calculateDuration();
+            checkAndUpdateUnansweredCall(phoneNumber, status, notes, duration);
+            // Close the popup immediately
+            document.getElementById('popupOverlay2').style.display = 'none';
+        }
+
+        function checkAndUpdateUnansweredCall(number, status, notes, duration) {
+            console.log('Checking for unanswered call:', number);
+            
+            // First, check if this number exists in unanswered calls
+            database.ref('calls').orderByChild('number').equalTo(number).once('value', snapshot => {
+                let unansweredCall = null;
+                snapshot.forEach(childSnapshot => {
+                    const call = childSnapshot.val();
+                    if (call.status === 'Unanswered') {
+                        unansweredCall = { key: childSnapshot.key, ...call };
+                        return true; // Break the loop
+                    }
+                });
+
+                if (unansweredCall) {
+                    console.log('Found unanswered call:', unansweredCall);
+                    // Update the unanswered call
+                    const updates = {
+                        status: status,
+                        notes: notes,
+                        duration: duration,
+                        dateTime: getCurrentDateTime(),
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    };
+
+                    database.ref(`calls/${unansweredCall.key}`).update(updates)
+                        .then(() => {
+                            console.log('Unanswered call updated successfully');
+                            notifyParentWindow({ type: 'callUpdated', call: { ...unansweredCall, ...updates } });
+                            resetDialpad();
+                        })
+                        .catch(error => {
+                            console.error('Error updating unanswered call:', error);
+                            alert('Failed to update call data. Please try again.');
+                        });
+                } else {
+                    // If no unanswered call found, record as a new call
+                    recordCallData(number, status, notes, duration);
+                }
+            });
+        }
+
+        function recordCallData(number, status, notes, duration) {
+            console.log('Recording new call data:', { number, status, notes, duration });
+            
+            const callData = {
+                number: number,
+                status: status,
+                notes: notes,
+                duration: duration,
+                dateTime: getCurrentDateTime(),
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            database.ref('calls').push(callData)
+                .then(() => {
+                    console.log('New call data successfully recorded in Firebase:', callData);
+                    notifyParentWindow({ type: 'newCall', call: callData });
+                    resetDialpad();
+                })
+                .catch((error) => {
+                    console.error('Error recording call data:', error);
+                    alert('Failed to save call data. Please try again.');
+                });
+            
+            resetDialpad();
+        }
+
+        function getCurrentDateTime() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            return `${day}/${month}/${year.toString().slice(-2)} ${time}`;
+        }
+
+        function notifyParentWindow(data) {
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage(data, '*');
+            }
+        }
+
+        function resetDialpad() {
+            phoneNumber = '';
+            updateDisplay();
+        }
+
+        // Add event listeners for the popup buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('yesButton').addEventListener('click', function() {
+                console.log('Yes button clicked');
+                handleCallAnswer(true);
+            });
+
+            document.getElementById('noButton').addEventListener('click', function() {
+                console.log('No button clicked');
+                handleCallAnswer(false);
+            });
+
+            document.getElementById('notInterestedButton').addEventListener('click', function() {
+                console.log('Not Interested button clicked');
+                handleCallStatus('Not Interested');
+            });
+
+            document.getElementById('interestedButton').addEventListener('click', function() {
+                console.log('Interested button clicked');
+                handleCallStatus('Interested');
+            });
+
+            document.getElementById('callbackButton').addEventListener('click', function() {
+                console.log('Callback button clicked');
+                handleCallStatus('Callback');
+            });
+        });
+
+        function formatTime(date) {
+            const hours = date.getHours();
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const formattedHours = (hours % 12 || 12).toString();
+            return `${formattedHours}:${minutes}${ampm}`;
+        }
+    </script>
+</body>
+</html>

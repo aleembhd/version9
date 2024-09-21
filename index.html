@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Professional Black & White UI</title>
+    <!-- Add favicon -->
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="images/favicon.ico">
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <style>
+        :root {
+            --primary-color: #000000;
+            --secondary-color: #ffffff;
+            --accent-color: #808080;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .logo {
+            max-width: 150px;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .quote {
+            font-size: 1rem;
+            font-style: italic;
+            margin-bottom: 2rem;
+            color: var(--accent-color);
+        }
+
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .btn {
+            position: relative;
+            padding: 0.8rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary-color);
+            background: var(--secondary-color);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-color);
+            transition: all 0.3s ease;
+            z-index: 1;
+        }
+
+        .btn:hover::before {
+            left: 0;
+        }
+
+        .btn span {
+            position: relative;
+            z-index: 2;
+        }
+
+        @media (min-width: 480px) {
+            .logo {
+                max-width: 200px;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .quote {
+                font-size: 1.2rem;
+            }
+
+            .btn-container {
+                flex-direction: row;
+                justify-content: center;
+            }
+
+            .btn {
+                width: 180px;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--secondary-color);
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 0.8rem 2.5rem 0.8rem 0.8rem;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #000000;
+            font-size: 1.2rem;
+        }
+
+        .remember-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .remember-container input {
+            margin-right: 0.5rem;
+        }
+
+        .submit-btn {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--accent-color);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .credential-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--accent-color);
+            border-radius: 5px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #000000;
+            font-size: 1.2rem;
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            .btn-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 80%;
+                margin: 10px 0;
+                padding: 15px;
+                background-color: #000;
+                color: #fff;
+                border: 2px solid #fff;
+                border-radius: 30px;
+                transition: all 0.3s ease;
+            }
+
+            .btn:active {
+                transform: scale(0.95);
+                background-color: #fff;
+                color: #000;
+            }
+
+            /* Cool ripple effect */
+            .btn {
+                position: relative;
+                overflow: hidden;
+            }
+
+            .btn:after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 5px;
+                height: 5px;
+                background: rgba(255, 255, 255, 0.5);
+                opacity: 0;
+                border-radius: 100%;
+                transform: scale(1, 1) translate(-50%);
+                transform-origin: 50% 50%;
+            }
+
+            @keyframes ripple {
+                0% {
+                    transform: scale(0, 0);
+                    opacity: 1;
+                }
+                20% {
+                    transform: scale(25, 25);
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0;
+                    transform: scale(40, 40);
+                }
+            }
+
+            .btn:focus:not(:active)::after {
+                animation: ripple 1s ease-out;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- <img src="images/logo.png" alt="Company Logo" class="logo"> -->
+        <h1>Welcome</h1>
+        <p class="quote" id="motivationalQuote"></p>
+        <div class="btn-container">
+            <button class="btn" id="telecallerBtn"><span>Telecaller</span></button>
+            <button class="btn" id="marketingManagerBtn"><span>Marketing Manager</span></button>
+        </div>
+    </div>
+
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <button id="backBtn" class="back-btn" style="background-color: black; color: white; border: none; padding: 5px 10px; font-size: 12px; cursor: pointer; border-radius: 5px;">&larr; Back</button>
+            <h2 style="margin-bottom: 20px;">Login Details </h2>
+            <div class="input-container">
+                <input type="email" id="emailInput" class="credential-input" placeholder="Enter email">
+                <div class="password-container">
+                    <input type="password" id="passwordInput" class="credential-input" placeholder="Enter password">
+                    <span class="password-toggle" id="passwordToggle">👁️</span>
+                </div>
+            </div>
+            <div class="remember-container">
+                <input type="checkbox" id="rememberCheckbox">
+                <label for="rememberCheckbox">Remember me</label>
+            </div>
+            <button id="submitPassword" class="submit-btn">Submit</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyADbdw5KtrmjQT_5EBJ6kNzExx8kkTEkuc",
+            authDomain: "realestate-694f3.firebaseapp.com",
+            databaseURL: "https://realestate-694f3-default-rtdb.firebaseio.com",
+            projectId: "realestate-694f3",
+            storageBucket: "realestate-694f3.appspot.com",
+            messagingSenderId: "966861149434",
+            appId: "1:966861149434:web:8a57876a91c80bcf216543",
+            measurementId: "G-J68SDN99DV"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const quotes = [
+                "Build your dreams, one property at a time.",
+                "Real estate: Where passion meets prosperity.",
+                "Unlock potential in every square foot.",
+                "Your dream home awaits. Make it happen.",
+                "Turn bricks and mortar into golden opportunities.",
+                "Real estate success: Vision, action, determination.",
+                "Invest in land, they're not making more.",
+                "Transform lives through real estate excellence.",
+                "Create wealth, build legacies through property.",
+                "Real estate: The cornerstone of financial freedom."
+            ];
+
+            const quoteElement = document.getElementById('motivationalQuote');
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            quoteElement.textContent = randomQuote;
+
+            const telecallerBtn = document.getElementById('telecallerBtn');
+            const marketingManagerBtn = document.getElementById('marketingManagerBtn');
+            const modal = document.getElementById('passwordModal');
+            const emailInput = document.getElementById('emailInput');
+            const passwordInput = document.getElementById('passwordInput');
+            const rememberCheckbox = document.getElementById('rememberCheckbox');
+            const submitPassword = document.getElementById('submitPassword');
+            const passwordToggle = document.getElementById('passwordToggle');
+            const backBtn = document.getElementById('backBtn');
+
+            telecallerBtn.addEventListener('click', function() {
+                window.open('dialpad.html', '_blank');
+            });
+
+            marketingManagerBtn.addEventListener('click', function() {
+                modal.style.display = 'block';
+                if (localStorage.getItem('rememberedEmail')) {
+                    emailInput.value = localStorage.getItem('rememberedEmail');
+                    passwordInput.value = localStorage.getItem('rememberedPassword');
+                    rememberCheckbox.checked = true;
+                }
+            });
+
+            passwordToggle.addEventListener('click', function() {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    passwordToggle.textContent = '🔒';
+                } else {
+                    passwordInput.type = 'password';
+                    passwordToggle.textContent = '👁️';
+                }
+            });
+
+            submitPassword.addEventListener('click', function() {
+                const email = emailInput.value;
+                const password = passwordInput.value;
+
+                if (email === 'admin@gmail.com' && password === 'admin@123') {
+                    firebase.auth().signInWithEmailAndPassword(email, password)
+                        .then((userCredential) => {
+                            if (rememberCheckbox.checked) {
+                                localStorage.setItem('rememberedEmail', email);
+                                localStorage.setItem('rememberedPassword', password);
+                            } else {
+                                localStorage.removeItem('rememberedEmail');
+                                localStorage.removeItem('rememberedPassword');
+                            }
+                            modal.style.display = 'none';
+                            window.open('maindashboard.html', '_blank');
+                        })
+                        .catch((error) => {
+                            alert("Authentication failed: " + error.message);
+                        });
+                } else {
+                    alert("Incorrect email or password. Access denied.");
+                }
+            });
+
+            backBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                emailInput.value = '';
+                passwordInput.value = '';
+                rememberCheckbox.checked = false;
+            });
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        });
+    </script>
+</body>
+</html>
